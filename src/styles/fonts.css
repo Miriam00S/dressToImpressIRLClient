@@ -1,0 +1,12 @@
+@font-face {
+    font-family: 'Bauhaus 93';
+    src: url('../assets/fonts/Bauhaus93.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+  
+  .bauhaus-text {
+    font-family: 'Bauhaus 93', sans-serif;
+    font-size: 30px;
+  }
+  
