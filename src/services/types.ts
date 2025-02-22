@@ -37,3 +37,21 @@ export type User = {
     id: number,
     points: number
   }
+
+  export type Show = {
+    id: number,
+    creatorId: number,
+    topic: string,
+    banner: string,
+    maxParticipantsNumber: number,
+    joiningDate: string,
+    votingTime: string,
+    categories: Categorie[],
+    comments: Comment[],
+    stylings: Styling[]
+  }
+
+  export type Categorie = {
+    id: number,
+    name: string
+  }
