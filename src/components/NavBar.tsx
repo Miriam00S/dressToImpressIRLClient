@@ -86,12 +86,12 @@ const NavBar: React.FC = () => {
     }
   };
 
-  // Obliczamy liczbę nieprzeczytanych powiadomień
+  // calculate the number of unread notifications
   const unreadCount = user?.notifications
     ? user.notifications.filter((notification: Notification) => !notification.read).length
     : 0;
 
-  // Funkcja, która wywołuje PUT notifications/{id}
+  // PUT notifications/{id}
   const handleNotificationItemClick = async (notification: Notification) => {
     try {
       const response = await fetch(`${BASE_URL}/notifications/${notification.id}`, {
@@ -103,14 +103,14 @@ const NavBar: React.FC = () => {
         },
         body: JSON.stringify({
           read: true,
-          message: notification.message, // lub zaktualizowana wartość, jeśli potrzebne
+          message: notification.message,
         }),
       });
       if (!response.ok) {
         throw new Error(`PUT request error: ${response.statusText}`);
       }
       const updatedNotification = await response.json();
-      // Aktualizujemy stan lokalny - oznaczamy powiadomienie jako przeczytane
+      // update the local status - we mark the notification as read
       if (user) {
         setUser({
           ...user,
@@ -126,7 +126,7 @@ const NavBar: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full flex items-center justify-between px-6 py-2 bg-white shadow-md">
+    <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 py-2 bg-white shadow-md">
       {/* Logo */}
       <img src={logo} alt="Logo" className="h-12 w-auto" />
 
@@ -188,39 +188,39 @@ const NavBar: React.FC = () => {
             </Menu>
             {/* Menu - notifications */}
             <Menu
-  anchorEl={notificationsAnchorEl}
-  open={Boolean(notificationsAnchorEl)}
-  onClose={handleNotificationMenuClose}
-  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
->
-  <MenuItem
-    disabled
-    sx={{
-      '&.Mui-disabled': {
-        opacity: 1,
-        color: 'inherit',
-        fontSize: '1.2rem', // powiększony nagłówek
-      },
-    }}
-  >
-    Notifications
-  </MenuItem>
-  <Divider sx={{ my: 1, borderColor: 'grey.300' }} />
-  {user?.notifications && user.notifications.length > 0 ? (
-    user.notifications.slice().reverse().map((notification: Notification, index) => (
-      <MenuItem
-        key={notification.id || index}
-        onClick={() => handleNotificationItemClick(notification)}
-        sx={{ fontWeight: !notification.read ? 'bold' : 'normal' }}
-      >
-        {notification.message}
-      </MenuItem>
-    ))
-  ) : (
-    <MenuItem onClick={handleNotificationMenuClose}>No notifications</MenuItem>
-  )}
-</Menu>
+              anchorEl={notificationsAnchorEl}
+              open={Boolean(notificationsAnchorEl)}
+              onClose={handleNotificationMenuClose}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+              <MenuItem
+                disabled
+                sx={{
+                  '&.Mui-disabled': {
+                    opacity: 1,
+                    color: 'inherit',
+                    fontSize: '1.2rem',
+                  },
+                }}
+              >
+                Notifications
+              </MenuItem>
+              <Divider sx={{ my: 1, borderColor: 'grey.300' }} />
+              {user?.notifications && user.notifications.length > 0 ? (
+                user.notifications.slice().reverse().map((notification: Notification, index) => (
+                  <MenuItem
+                    key={notification.id || index}
+                    onClick={() => handleNotificationItemClick(notification)}
+                    sx={{ fontWeight: !notification.read ? 'bold' : 'normal' }}
+                  >
+                    {notification.message}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem onClick={handleNotificationMenuClose}>No notifications</MenuItem>
+              )}
+            </Menu>
 
           </>
         ) : (

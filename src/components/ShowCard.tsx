@@ -13,15 +13,15 @@ const ShowCard: React.FC<ShowCardProps> = ({ show }) => {
   };
 
   return (
-    <Card>
+    <Card sx={{ maxWidth: 300, width: '100%' }}>
       <CardMedia
         component="img"
-        sx={{ height: 200, objectFit: 'cover' }}
+        sx={{ height: 150, objectFit: 'cover' }}
         image={`${BASE_URL}/files/${show.banner}`}
         alt={show.topic}
       />
       <CardContent>
-        <Typography variant="h5" component="div">
+        <Typography variant="h6" component="div">
           {show.topic}
         </Typography>
         <div

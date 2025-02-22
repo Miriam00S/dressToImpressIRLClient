@@ -1,41 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Show } from '../services/types';
-import { fetchGET } from '../services/api';
-import ShowCard from './ShowCard';
-
-const ShowsList: React.FC = () => {
-  const [shows, setShows] = useState<Show[]>([]);
-  const categoryName = "Special ocasions"; // Przykładowa kategoria
-
-  useEffect(() => {
-    const fetchShows = async () => {
-      try {
-        const data = await fetchGET(`/shows/by-category?name=${categoryName}`);
-        setShows(data);
-      } catch (error) {
-        console.error("Błąd podczas pobierania pokazów:", error);
-      }
-    };
-
-    fetchShows();
-  }, [categoryName]);
+import React from 'react';
+import { Categories } from '../services/enums';
+import ShowListByCategory from './ShowsListByCategory';
+const ShowList: React.FC = () => {
+  // iterate through the enuma Categories values
+  const categories = Object.values(Categories);
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-        gap: "16px",
-        padding: "16px",
-      }}
-    >
-      {shows.map((show) => (
-        <div key={show.id}>
-          <ShowCard show={show} />
-        </div>
+    <div className='p-7'>
+      {categories.map((category) => (
+        <ShowListByCategory key={category} category={category} />
       ))}
     </div>
   );
 };
 
-export default ShowsList;
+export default ShowList;
