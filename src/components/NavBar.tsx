@@ -1,3 +1,4 @@
+// NavBar.tsx
 import React, { useEffect, useState } from 'react';
 import logo from '../assets/images/logo.png';
 import {
@@ -20,21 +21,15 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import LoginDialog from './LoginDialog';
 import { BASE_URL, fetchGET, fetchPOST } from '../services/api';
 import { User } from '../services/types';
+import { Notification } from '../services/types';
 
-// Załóżmy, że typ powiadomienia wygląda mniej więcej tak:
-type Notification = {
-  id: string | number;
-  message: string;
-  read: boolean;
-};
+interface NavBarProps {
+  onSearch: (query: string) => void;
+  autocompleteOptions?: string[];
+}
 
-const top100Films = [
-  { title: 'The Shawshank Redemption', year: 1994 },
-  { title: 'The Godfather', year: 1972 },
-  // ... pozostałe filmy
-];
-
-const NavBar: React.FC = () => {
+const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
+  const [inputValue, setInputValue] = useState<string>("");
   const [isLogged, setIsLogged] = useState<boolean>(false);
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
   const [user, setUser] = useState<User>();
@@ -50,7 +45,7 @@ const NavBar: React.FC = () => {
           setUser(userData);
         }
       } catch (error) {
-        console.error('Brak aktywnej sesji lub błąd podczas sprawdzania sesji:', error);
+        console.error('No active session or error while checking the session:', error);
         setIsLogged(false);
       }
     };
@@ -82,16 +77,16 @@ const NavBar: React.FC = () => {
       setUser(undefined);
       handleMenuClose();
     } catch (error) {
-      console.error('Błąd podczas wylogowywania:', error);
+      console.error('Error logging out:', error);
     }
   };
 
-  // calculate the number of unread notifications
+  // Liczba nieprzeczytanych powiadomień
   const unreadCount = user?.notifications
     ? user.notifications.filter((notification: Notification) => !notification.read).length
     : 0;
 
-  // PUT notifications/{id}
+  // Aktualizacja powiadomienia
   const handleNotificationItemClick = async (notification: Notification) => {
     try {
       const response = await fetch(`${BASE_URL}/notifications/${notification.id}`, {
@@ -110,7 +105,6 @@ const NavBar: React.FC = () => {
         throw new Error(`PUT request error: ${response.statusText}`);
       }
       const updatedNotification = await response.json();
-      // update the local status - we mark the notification as read
       if (user) {
         setUser({
           ...user,
@@ -130,29 +124,60 @@ const NavBar: React.FC = () => {
       {/* Logo */}
       <img src={logo} alt="Logo" className="h-12 w-auto" />
 
-      {/* Search Bar */}
+      {/* Search Bar*/}
       <div className="flex-1 items-center mx-4 max-w-lg space-x-2">
-        <Autocomplete
-          id="searchField"
-          freeSolo
-          options={top100Films.map((option) => option.title)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label={
-                <div className="flex items-center">
-                  <SearchIcon className="mr-2" /> Search shows
-                </div>
+      <Autocomplete
+        id="searchField"
+        freeSolo
+        inputValue={inputValue}
+        onInputChange={(event, newInputValue, reason) => {
+          setInputValue(newInputValue);
+          if (reason === "clear") {
+            onSearch("");
+          }
+        }}
+        onChange={(event, value) => {
+          if (typeof value === "string") {
+            onSearch(value);
+          } else if (value) {
+            onSearch(value);
+          }
+        }}
+        // Pokazujemy opcje tylko, gdy użytkownik wpisał co najmniej 1 znak
+        options={inputValue.length >= 1 ? (autocompleteOptions || []) : []}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label={
+              <div className="flex items-center">
+                <SearchIcon className="mr-2" /> Search shows
+              </div>
+            }
+            variant="outlined"
+            fullWidth
+            color="secondary"
+            onKeyUp={(e) => {
+              if (e.key === "Enter") {
+                if (autocompleteOptions && autocompleteOptions.length > 0) {
+                  const filteredSuggestions = autocompleteOptions.filter(opt =>
+                    opt.toLowerCase().includes(inputValue.toLowerCase())
+                  );
+                  if (filteredSuggestions.length > 0) {
+                    onSearch(filteredSuggestions.join(', '));
+                  } else {
+                    onSearch(inputValue);
+                  }
+                } else {
+                  onSearch(inputValue);
+                }
               }
-              variant="outlined"
-              fullWidth
-              color="secondary"
-            />
-          )}
-        />
+            }}
+          />
+        )}
+      />
       </div>
 
-      {/* Notifications and Avatar */}
+      {/* Powiadomienia i Avatar */}
       <div className="flex items-center gap-4">
         {isLogged ? (
           <>
@@ -171,7 +196,6 @@ const NavBar: React.FC = () => {
                 {...(user && user.photo ? { src: `${BASE_URL}/files/${user.photo}` } : {})}
               />
             </IconButton>
-            {/* Menu - avatar */}
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
@@ -186,7 +210,6 @@ const NavBar: React.FC = () => {
                 <LogoutIcon /> Sign out
               </MenuItem>
             </Menu>
-            {/* Menu - notifications */}
             <Menu
               anchorEl={notificationsAnchorEl}
               open={Boolean(notificationsAnchorEl)}
@@ -221,7 +244,6 @@ const NavBar: React.FC = () => {
                 <MenuItem onClick={handleNotificationMenuClose}>No notifications</MenuItem>
               )}
             </Menu>
-
           </>
         ) : (
           <>
@@ -234,6 +256,7 @@ const NavBar: React.FC = () => {
           </>
         )}
       </div>
+
       <LoginDialog
         open={isLoginOpen}
         onClose={() => setIsLoginOpen(false)}

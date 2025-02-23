@@ -5,6 +5,7 @@ import { fetchGET } from '../services/api';
 import ShowCard from './ShowCard';
 import Carousel from './Carousel';
 
+
 interface ShowListByCategoryProps {
   category: string;
 }
@@ -17,7 +18,7 @@ const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => 
     const fetchShows = async () => {
       try {
         // Force a delay for the loading effect
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         const data = await fetchGET(`/shows/by-category?name=${encodeURIComponent(category)}`);
         setShows(data);
       } catch (error) {
@@ -31,7 +32,7 @@ const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => 
   }, [category]);
 
   return (
-    <div className="pb-3 mb-4">
+    <div className="pb-3 mb-4 overflow-x-hidden ">
       {loading ? (
         <Skeleton variant="text" width={200} height={40} />
       ) : (
@@ -47,11 +48,7 @@ const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => 
             </div>
           ))
         ) : shows.length > 0 ? (
-          <Carousel itemsToShow={5}>
-            {shows.map((show) => (
-              <ShowCard key={show.id} show={show} />
-            ))}
-          </Carousel>
+          shows.map((show) => <ShowCard key={show.id} show={show} />)
         ) : (
           <Typography variant="body1">No shows available.</Typography>
         )}
