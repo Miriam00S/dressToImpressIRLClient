@@ -1,57 +1,79 @@
-import React, { useState } from 'react';
-import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
-import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
-import '../styles/Carousel.css';
+import React, { useState, useEffect } from 'react';
+import CircleIcon from '@mui/icons-material/Circle';
+import '../styles/Carousel.css'
 
-interface CarouselProps {
-  children: React.ReactNode[];
-  itemsToShow: number;
-}
+type CarouselProps = {
+  slides: React.ReactNode[];
+};
 
-const Carousel: React.FC<CarouselProps> = ({ children, itemsToShow }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const totalItems = children.length;
-  const showArrows = totalItems >= 6; //show arrows when there are at least 6 tabs
+const Carousel: React.FC<CarouselProps> = ({ slides }) => {
+  const [slideIndex, setSlideIndex] = useState(0);
 
-  const handleNext = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex >= totalItems - itemsToShow ? 0 : prevIndex + 1
+  useEffect(() => {
+    setSlideIndex(0);
+  }, [slides]);
+
+  useEffect(() => {
+    const autoSlide = setInterval(() => {
+      setSlideIndex((index) => {
+        if (index === slides.length - 1) return 0;
+        return index + 1;
+      });
+    }, 20000); 
+
+    return () => clearInterval(autoSlide);
+  }, [slides]);
+
+  if (slides.length === 0) {
+    return (
+      <section className="h-full w-full relative rounded-lg">
+        No slides
+      </section>
     );
-  };
-
-  const handlePrev = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex <= 0 ? totalItems - itemsToShow : prevIndex - 1
-    );
-  };
+  }
 
   return (
-    <div className="carousel-wrapper">
-      {showArrows && (
-        <button onClick={handlePrev} className="carousel-btn carousel-btn-left">
-          <ArrowBackIosNewRoundedIcon />
-        </button>
-      )}
-      <div className="carousel-container">
-        <div
-          className="carousel-inner"
-          style={{
-            transform: `translateX(-${(100 / itemsToShow) * currentIndex}%)`,
-          }}
-        >
-          {React.Children.map(children, (child) => (
-            <div className="carousel-item" style={{ width: `${100 / itemsToShow}%` }}>
-              {child}
-            </div>
+    <section className="h-full w-full relative rounded-lg">
+      <div className="w-full h-full flex overflow-hidden">
+        {slides.map((slide, index) => (
+          <div
+            key={index}
+            aria-hidden={slideIndex !== index}
+            className="img-slider-img"
+            style={{ translate: `${-100 * slideIndex}%` }}
+          >
+            {slide}
+          </div>
+        ))}
+      </div>
+
+      {/* dots */}
+      <div className="absolute bottom-2 flex justify-center w-full h-10 items-center">
+        <div className="flex bg-opacity-60 rounded-full px-2 gap-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              className="img-slider-dot-btn"
+              onClick={() => setSlideIndex(index)}
+            >
+              {index === slideIndex ? (
+                <CircleIcon
+                  fontSize="inherit"
+                  className="text-black w-[8px] h-[8px]"
+                />
+              ) : (
+                <CircleIcon
+                  fontSize="inherit"
+                  className="text-black w-[5px] h-[5px]"
+                />
+              )}
+            </button>
           ))}
         </div>
       </div>
-      {showArrows && (
-        <button onClick={handleNext} className="carousel-btn carousel-btn-right">
-          <ArrowForwardIosRoundedIcon />
-        </button>
-      )}
-    </div>
+
+      <div id="after-image-slider-controls" />
+    </section>
   );
 };
 

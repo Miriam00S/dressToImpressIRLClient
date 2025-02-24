@@ -1,45 +1,63 @@
-.carousel-wrapper {
-  position: relative;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.img-slider-img {
+  object-fit: cover;
   width: 100%;
-}
-.carousel-container {
-  position: relative;
-}
-
-.carousel-inner {
-  display: flex;
-  transition: transform 300ms ease-in-out;
-}
-
-.carousel-item {
+  height: 100%;
+  display: block;
   flex-shrink: 0;
+  flex-grow: 0;
 }
 
-.carousel-btn {
+.img-slider-btn {
+  all: unset;
+  display: block;
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.8);
-  border: none;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
+  transition: background-color 100ms ease-in-out;
 }
 
-.carousel-btn-left {
-  left: 0; 
+.img-slider-btn > * {
+  width: 2rem;
+  height: 2rem;
 }
 
-.carousel-btn-right {
-  right: 0;
+@keyframes squish {
+  50% {
+    scale: 1.4 0.6;
+  }
 }
 
-.hide-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+.img-slider-dot-btn {
+  all: unset;
+  display: block;
+  cursor: pointer;
+  transition: scale 100ms ease-in-out;
 }
 
-.hide-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+.img-slider-dot-btn:hover,
+.img-slider-dot-btn:focus-visible {
+  scale: 1.2;
+}
+
+
+
+.img-slider-dot-btn:focus-visible,
+.img-slider-btn:focus-visible {
+  outline: auto;
+}
+
+@media not (prefers-reduced-motion) {
+  .img-slider-img {
+    transition: translate 300ms ease-in-out;
+  }
+
+  .img-slider-btn:hover > *,
+  .img-slider-btn:focus-visible > * {
+    animation: squish 200ms ease-in-out;
+  }
 }

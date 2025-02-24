@@ -4,7 +4,14 @@ import ShowsList from "./components/ShowsList";
 import { Show } from "./services/types";
 import { fetchGET } from "./services/api";
 import ShowsListByTopic from "./components/ShowsListByTopic";
+import Carousel from "./components/Carousel";
+import ShowSlide from "./components/ShowSlide";
 
+
+function getRandomShows(shows: Show[], count: number): Show[] {
+  const shuffled = [...shows].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
 
 function App() {
   const [shows, setShows] = useState<Show[]>([]);
@@ -41,15 +48,26 @@ function App() {
     fetchShows();
   }, [searchQuery]);
   
-
   const autocompleteOptions = Array.from(new Set(shows.map(show => show.topic)))
+
+  const randomFour = getRandomShows(shows, 4);
+
+  const slides = randomFour.map((show) => (
+    <ShowSlide
+      key={show.id}
+      show={show}
+    />
+  ));
 
   return (
     <div className="overflow-x-hidden flex flex-col items-start min-h-screen">
       <NavBar onSearch={setSearchQuery} autocompleteOptions={autocompleteOptions}/>
       <div className="mt-16">
         {searchQuery.trim() === '' ? (
-          <ShowsList />
+          <>
+            <Carousel slides={slides} />
+              <ShowsList />
+              </>
         ) : (
           <ShowsListByTopic showsByTopic={showsByTopic} loading={loading} />
         )}

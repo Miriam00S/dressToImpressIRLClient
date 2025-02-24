@@ -16,7 +16,6 @@ const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => 
   const [groupIndex, setGroupIndex] = useState<number>(0);
   const [cardsPerGroup, setCardsPerGroup] = useState<number>(Math.max(Math.floor(window.innerWidth / 300), 1));
 
-  // Nasłuchiwanie zmiany rozmiaru okna w celu aktualizacji ilości kart w grupie
   useEffect(() => {
     const handleResize = () => {
       const newCardsPerGroup = Math.max(Math.floor(window.innerWidth / 300), 1);
@@ -71,7 +70,7 @@ const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => 
   const showArrows = groups.length > 1;
 
   return (
-    <div className="pb-3 mb-4 overflow-x-hidden">
+    <div className="pb-3 mb-4">
       {loading ? (
         <Skeleton variant="text" width={200} height={40} />
       ) : (

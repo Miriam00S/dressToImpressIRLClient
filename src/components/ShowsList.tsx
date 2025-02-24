@@ -6,7 +6,7 @@ const ShowList: React.FC = () => {
   const categories = Object.values(Categories);
 
   return (
-    <div className='p-7'>
+    <div className='w-full p-7'>
       {categories.map((category) => (
         <ShowListByCategory key={category} category={category} />
       ))}

@@ -1,4 +1,3 @@
-// NavBar.tsx
 import React, { useEffect, useState } from 'react';
 import logo from '../assets/images/logo.png';
 import {
@@ -81,12 +80,10 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
     }
   };
 
-  // Liczba nieprzeczytanych powiadomień
   const unreadCount = user?.notifications
     ? user.notifications.filter((notification: Notification) => !notification.read).length
     : 0;
 
-  // Aktualizacja powiadomienia
   const handleNotificationItemClick = async (notification: Notification) => {
     try {
       const response = await fetch(`${BASE_URL}/notifications/${notification.id}`, {
@@ -120,7 +117,7 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 py-2 bg-white shadow-md">
+    <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 py-2 bg-white ">
       {/* Logo */}
       <img src={logo} alt="Logo" className="h-12 w-auto" />
 
@@ -143,7 +140,6 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
             onSearch(value);
           }
         }}
-        // Pokazujemy opcje tylko, gdy użytkownik wpisał co najmniej 1 znak
         options={inputValue.length >= 1 ? (autocompleteOptions || []) : []}
         renderInput={(params) => (
           <TextField
@@ -177,7 +173,7 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
       />
       </div>
 
-      {/* Powiadomienia i Avatar */}
+      {/* Notifications and Avatar */}
       <div className="flex items-center gap-4">
         {isLogged ? (
           <>
