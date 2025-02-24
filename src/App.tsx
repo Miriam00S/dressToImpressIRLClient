@@ -62,12 +62,12 @@ function App() {
   return (
     <div className="overflow-x-hidden flex flex-col items-start min-h-screen">
       <NavBar onSearch={setSearchQuery} autocompleteOptions={autocompleteOptions}/>
-      <div className="mt-16">
+      <div className="mt-16 bg-white">
         {searchQuery.trim() === '' ? (
           <>
             <Carousel slides={slides} />
-              <ShowsList />
-              </>
+            <ShowsList />
+          </>
         ) : (
           <ShowsListByTopic showsByTopic={showsByTopic} loading={loading} />
         )}

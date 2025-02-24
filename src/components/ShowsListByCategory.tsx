@@ -117,7 +117,7 @@ const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => 
           ) : groups.length > 0 ? (
             groups[0].map((show) => <ShowCard key={show.id} show={show} />)
           ) : (
-            <Typography variant="body1">No shows available.</Typography>
+            <Typography className='text-gray-500' variant="body1">No shows available.</Typography>
           )}
         </div>
       )}

@@ -47,7 +47,7 @@ const ShowSlide: React.FC<ShowSlideProps> = ({ show }) => {
           padding: '1rem 2rem',
         }}
       >
-        <div style={{ marginLeft: '5rem' }}>
+        <div style={{ marginLeft: '5rem' }} className='text-black'>
           <Typography variant="h4" gutterBottom>
             {show.topic}
           </Typography>
