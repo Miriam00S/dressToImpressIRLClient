@@ -13,7 +13,7 @@ const ShowCard: React.FC<ShowCardProps> = ({ show }) => {
   };
 
   return (
-    <Card sx={{minwidth: 300 }}> 
+    <Card sx={{width: 300 }}> 
       <CardMedia
         component="img"
         sx={{ height: 150, objectFit: 'cover' }}

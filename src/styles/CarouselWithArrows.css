@@ -1,0 +1,36 @@
+.carousel-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  .carousel-container {
+    position: relative;
+  }
+  
+  .carousel-inner {
+    display: flex;
+    transition: transform 300ms ease-in-out;
+  }
+  
+  .carousel-item {
+    flex-shrink: 0;
+  }
+  
+  .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+  }
+  
+  .carousel-btn-left {
+    left: 0; 
+  }
+  
+  .carousel-btn-right {
+    right: 0;
+  }

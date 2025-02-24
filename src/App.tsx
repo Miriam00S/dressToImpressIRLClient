@@ -8,6 +8,7 @@ import Carousel from "./components/Carousel";
 import ShowSlide from "./components/ShowSlide";
 
 
+
 function getRandomShows(shows: Show[], count: number): Show[] {
   const shuffled = [...shows].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
@@ -73,6 +74,7 @@ function App() {
         )}
       </div>
     </div>
+    
   );
 }
 

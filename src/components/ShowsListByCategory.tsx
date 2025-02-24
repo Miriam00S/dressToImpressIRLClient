@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Skeleton, IconButton } from '@mui/material';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import { Typography, Skeleton } from '@mui/material';
 import { Show } from '../services/types';
 import { fetchGET } from '../services/api';
 import ShowCard from './ShowCard';
+import Carousel from './CarouselWithArrows';
 
 interface ShowListByCategoryProps {
   category: string;
@@ -13,24 +12,14 @@ interface ShowListByCategoryProps {
 const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => {
   const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [groupIndex, setGroupIndex] = useState<number>(0);
-  const [cardsPerGroup, setCardsPerGroup] = useState<number>(Math.max(Math.floor(window.innerWidth / 300), 1));
-
-  useEffect(() => {
-    const handleResize = () => {
-      const newCardsPerGroup = Math.max(Math.floor(window.innerWidth / 300), 1);
-      setCardsPerGroup(newCardsPerGroup);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const [itemsToShow, setItemsToShow] = useState<number>(1);
+  const [cardWidth, setCardWidth] = useState<number>(300);
 
   useEffect(() => {
     const fetchShows = async () => {
       try {
-        // Dodajemy opóźnienie dla efektu ładowania
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // Opóźnienie dla efektu ładowania
+        await new Promise((resolve) => setTimeout(resolve, 3000));
         const data = await fetchGET(`/shows/by-category?name=${encodeURIComponent(category)}`);
         setShows(data);
       } catch (error) {
@@ -43,31 +32,25 @@ const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => 
     fetchShows();
   }, [category]);
 
-  // Grupowanie pokazów na podstawie cardsPerGroup
-  const groups: Show[][] = [];
-  for (let i = 0; i < shows.length; i += cardsPerGroup) {
-    groups.push(shows.slice(i, i + cardsPerGroup));
-  }
-
   useEffect(() => {
-    if (groupIndex >= groups.length) {
-      setGroupIndex(0);
-    }
-  }, [groups, groupIndex]);
+    const handleResize = () => {
+      // Ustalane wartości:
+      const containerPadding = 56; // p-7: 28px + 28px
+      const gap = 12; // gap-3 = 12px
+      // Dostępna szerokość kontenera:
+      const availableWidth = window.innerWidth - containerPadding;
+      // Obliczamy liczbę kart: (320N - 12 <= availableWidth) <=> N <= (window.innerWidth - 44)/320
+      const newItemsCount = Math.floor((window.innerWidth - 44) / 320);
+      setItemsToShow(Math.max(1, newItemsCount));
+      // Obliczamy efektywną szerokość pojedynczej karty (w opakowaniu):
+      const effectiveCardWidth = (availableWidth - (newItemsCount - 1) * gap) / newItemsCount;
+      setCardWidth(effectiveCardWidth);
+    };
 
-  const handlePrev = () => {
-    if (groupIndex > 0) {
-      setGroupIndex(groupIndex - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (groupIndex < groups.length - 1) {
-      setGroupIndex(groupIndex + 1);
-    }
-  };
-
-  const showArrows = groups.length > 1;
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="pb-3 mb-4">
@@ -79,48 +62,26 @@ const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => 
         </Typography>
       )}
 
-      {showArrows ? (
-        <div className="flex items-center gap-3 pb-2">
-          {groupIndex > 0 && (
-            <IconButton onClick={handlePrev} disabled={loading}>
-              <ArrowBackIosNewIcon />
-            </IconButton>
-          )}
-
-          <div className="flex gap-3">
-            {loading ? (
-              Array.from({ length: cardsPerGroup }).map((_, index) => (
-                <div key={index}>
-                  <Skeleton variant="rectangular" width={300} height={250} />
-                </div>
-              ))
-            ) : groups.length > 0 ? (
-              groups[groupIndex].map((show) => <ShowCard key={show.id} show={show} />)
-            ) : (
-              <Typography variant="body1">No shows available.</Typography>
-            )}
-          </div>
-          {groupIndex < groups.length - 1 && (
-            <IconButton onClick={handleNext} disabled={loading}>
-              <ArrowForwardIosIcon />
-            </IconButton>
-          )}
-        </div>
-      ) : (
-        <div className="flex gap-3 pb-2">
-          {loading ? (
-            Array.from({ length: cardsPerGroup }).map((_, index) => (
-              <div key={index}>
-                <Skeleton variant="rectangular" width={300} height={250} />
+      <div className="flex gap-3 pb-2">
+        {loading ? (
+          // Renderujemy tyle skeletonów, ile miejsc na karty się zmieści
+          Array.from({ length: itemsToShow }, (_, index) => (
+            <div key={index}>
+              <Skeleton variant="rectangular" width={cardWidth} height={250} />
+            </div>
+          ))
+        ) : shows.length > 0 ? (
+          <Carousel itemsToShow={itemsToShow}>
+            {shows.map((show) => (
+              <div className="p-1" key={show.id}>
+                <ShowCard show={show} />
               </div>
-            ))
-          ) : groups.length > 0 ? (
-            groups[0].map((show) => <ShowCard key={show.id} show={show} />)
-          ) : (
-            <Typography className='text-gray-500' variant="body1">No shows available.</Typography>
-          )}
-        </div>
-      )}
+            ))}
+          </Carousel>
+        ) : (
+          <Typography variant="body1">No shows available.</Typography>
+        )}
+      </div>
     </div>
   );
 };

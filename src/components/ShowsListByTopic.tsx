@@ -1,5 +1,5 @@
 import React from "react";
-import ShowCard from "./ShowCard";
+import ShowCard from "./ShowCardResult";
 import { Skeleton, Typography } from "@mui/material";
 import { Show } from "../services/types";
 
@@ -23,7 +23,7 @@ const ShowsListByTopic: React.FC<ShowsListByTopicProps> = ({ showsByTopic, loadi
               </div>
             ))
           ) : showsByTopic.length > 0 ? (
-            showsByTopic.map((show) => <ShowCard key={show.id} show={show} />)
+            showsByTopic.map((show) => <ShowCard key={show.id} show={show}/>)
           ) : (
             <Typography variant="body1">No results.</Typography>
           )}
