@@ -1,16 +1,16 @@
 import React, { useRef, useState } from 'react';
 import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Box, Typography, FormControlLabel, Checkbox, IconButton, ImageList, ImageListItem } from '@mui/material';
-import { fetchPOST } from '../services/api';
-import { Show } from '../services/types';
+import { fetchPOST, uploadFile } from '../services/api';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { Categories } from '../services/enums';
 import { bannerData } from '../assets/images/banners';
+import { Show } from '../services/types';
 
 interface FormValues {
   topic: string;
@@ -18,23 +18,38 @@ interface FormValues {
   votingTime: Dayjs | null;
   maxParticipantsNumber: number | null;
   banner: string;
+  creatorId: number;
 }
+
+interface ShowPayload {
+    topic: string;
+    joiningDate: string | null;
+    votingTime: string | null;
+    maxParticipantsNumber: number | null;
+    banner: string;
+    creatorId: number;
+  }
+  
 
 interface CreateShowDialogProps {
   open: boolean;
   onClose: () => void;
-  onShowCreated: (show: Show) => void;
+  creatorId: number;
 }
 
-const initialValues: FormValues = {
-  topic: '',
-  joiningDate: null,
-  votingTime: null,
-  maxParticipantsNumber: null,
-  banner: '',
-};
 
-const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onShowCreated }) => {
+
+const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, creatorId }) => {
+
+    const initialValues: FormValues = {
+        topic: '',
+        joiningDate: null,
+        votingTime: null,
+        maxParticipantsNumber: null,
+        banner: '',
+        creatorId: creatorId
+      };
+    
   const [formValues, setFormValues] = useState<FormValues>(initialValues);
   const [categories, setCategories] = useState<string[]>([]);
   const [error, setError] = useState<boolean>(false);
@@ -42,6 +57,13 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onSh
   const [step, setStep] = useState<number>(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedBanner, setUploadedBanner] = useState<string | null>(null);
+  const [joiningDateError, setJoiningDateError] = useState<string>('');
+  const [votingTimeError, setVotingTimeError] = useState<string>('');
+  const [bannerError, setBannerError] = useState<string>('');
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+
+  
+
 
   const handleButtonClick = () => {
     fileInputRef.current?.click();
@@ -51,13 +73,14 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onSh
     const file = e.target.files?.[0];
     if (file) {
       console.log('Wybrany plik:', file);
-      // Tworzymy URL obiektu, aby móc wyświetlić podgląd obrazka
       const url = URL.createObjectURL(file);
       setUploadedBanner(url);
-      // Opcjonalnie: ustawiamy też banner w formValues, jeśli chcesz przesłać tę wartość
+      setBannerFile(file);
       setFormValues(prev => ({ ...prev, banner: file.name }));
+      setBannerError("");
     }
   };
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -65,7 +88,13 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onSh
       ...prevValues,
       [name]: value,
     }));
+    
+    if (name === "topic" && value.trim() !== "") {
+      setError(false);
+      setHelperText("");
+    }
   };
+  
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const category = e.target.name;
@@ -79,24 +108,90 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onSh
 
   const handleCreateShow = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    const payload = {
-      ...formValues,
-      joiningDate: formValues.joiningDate ? formValues.joiningDate.toISOString() : null,
-      votingTime: formValues.votingTime ? formValues.votingTime.toISOString() : null,
-    };
-
+  
+    let bannerPath = formValues.banner;
+    if (bannerFile) {
+      try {
+        bannerPath = await uploadFile(bannerFile);
+      } catch (error) {
+        console.error("Error uploading banner:", error);
+        setError(true);
+        setHelperText("Error uploading banner. Please try again.");
+        return;
+      }
+    }
+  
+    const payload: ShowPayload = {
+        ...formValues,
+        banner: bannerPath,
+        joiningDate: formValues.joiningDate ? formValues.joiningDate.toISOString() : null,
+        votingTime: formValues.votingTime ? formValues.votingTime.toISOString() : null,
+      };
+      
+  
     try {
-      const newShow = await fetchPOST('/shows', payload);
+      const newShow = await fetchPOST<ShowPayload, Show>('/shows', payload);
+
       console.log('Created show:', newShow);
+      const showId = newShow.id;
+  
+      for (const category of categories) {
+        await fetchPOST('/categories', { name: category, showId: showId });
+      }
+        
       setError(false);
       setHelperText('');
-      onShowCreated(newShow);
       onClose();
     } catch (error) {
       console.error('Error creating show:', error);
       setError(true);
       setHelperText('Error creating show. Please try again.');
+    }
+  };
+  
+  
+
+  const validateStep1 = (): boolean => {
+    let isValid = true;
+    
+    if (!formValues.topic.trim()) {
+      setHelperText("Topic is required");
+      isValid = false;
+    } else {
+      setHelperText("");
+    }
+    
+    if (formValues.joiningDate === null) {
+      setJoiningDateError("Joining deadline is required");
+      isValid = false;
+    } else {
+      setJoiningDateError("");
+    }
+    
+    if (formValues.votingTime === null) {
+      setVotingTimeError("Voting deadline is required");
+      isValid = false;
+    } else {
+      setVotingTimeError("");
+    }
+    
+    if (!formValues.banner.trim()) {
+      setBannerError("Banner is required");
+      isValid = false;
+    } else {
+      setBannerError("");
+    }
+    
+    return isValid;
+  };
+  
+  const handleNextClick = () => {
+    if (validateStep1()) {
+      setStep(2);
+      setError(false);
+      setHelperText("");
+    } else {
+      setError(true);
     }
   };
 
@@ -127,7 +222,7 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onSh
           <AutoAwesomeIcon sx={{ transform: 'scaleX(-1)' }} />
         </div>
         {step === 2 && (
-          <Typography variant="h5">
+          <Typography variant="h5" component="div">
             Summary
           </Typography>
         )}
@@ -155,40 +250,57 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onSh
               </div>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <div className="mb-4">
-                  <DatePicker
+                    <DatePicker
                     label="Joining deadline"
                     value={formValues.joiningDate}
-                    onChange={(newValue) =>
-                      setFormValues(prev => ({ ...prev, joiningDate: newValue }))
-                    }
+                    minDate={dayjs()}
+                    onChange={(newValue) => {
+                        setFormValues(prev => ({ ...prev, joiningDate: newValue }));
+                        if (formValues.votingTime && newValue && !formValues.votingTime.isAfter(newValue)) {
+                            setJoiningDateError("Joining deadline must be befour voting deadline.");
+                        } else {
+                            setJoiningDateError("");
+                        }
+                    }}
                     slotProps={{
-                      textField: {
+                        textField: {
                         fullWidth: true,
                         margin: 'dense',
                         required: true,
-                        className: 'w-full'
-                      }
+                        className: 'w-full',
+                        error: Boolean(joiningDateError),
+                        helperText: joiningDateError,
+                        },
                     }}
-                  />
+                    />
                 </div>
                 <div className="mb-4">
-                  <DatePicker
+                    <DatePicker
                     label="Voting deadline"
                     value={formValues.votingTime}
-                    onChange={(newValue) =>
-                      setFormValues(prev => ({ ...prev, votingTime: newValue }))
-                    }
+                    minDate={dayjs()}
+                    onChange={(newValue) => {
+                        setFormValues(prev => ({ ...prev, votingTime: newValue }));
+                        if (formValues.joiningDate && !newValue?.isAfter(formValues.joiningDate)) {
+                        setVotingTimeError("Voting deadline must be later than joining deadline.");
+                        } else {
+                        setVotingTimeError("");
+                        }
+                    }}
                     slotProps={{
-                      textField: {
+                        textField: {
                         fullWidth: true,
                         margin: 'dense',
                         required: true,
-                        className: 'w-full'
-                      }
+                        className: 'w-full',
+                        error: Boolean(votingTimeError),
+                        helperText: votingTimeError,
+                        },
                     }}
-                  />
+                    />
                 </div>
-              </LocalizationProvider>
+                </LocalizationProvider>
+
               <div className="mb-4">
                 <TextField
                   id="maxParticipantsNumber"
@@ -200,7 +312,16 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onSh
                   variant="outlined"
                   value={formValues.maxParticipantsNumber || ''}
                   onChange={handleChange}
-                  error={error}
+                  error={
+                    formValues.maxParticipantsNumber !== null &&
+                    Number(formValues.maxParticipantsNumber) <= 5
+                  }
+                  helperText={
+                    formValues.maxParticipantsNumber !== null &&
+                    Number(formValues.maxParticipantsNumber) <= 5
+                      ? "Max participants number must be greater than 5"
+                      : ""
+                  }
                 />
               </div>
               <div className="mb-4 p-1">
@@ -224,8 +345,8 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onSh
                 </Box>
               </div>
               <div className="mb-4 p-1">
-                <Typography variant="body1" gutterBottom color="textSecondary">
-                  Select banner:
+                <Typography variant="body1" gutterBottom color={bannerError ? "error" : "textSecondary"}>
+                    Select banner *:
                 </Typography>
                 <ImageList
                   sx={{ width: '100%', height: 300, position: 'relative', zIndex: 1 }}
@@ -241,6 +362,7 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onSh
                         ...prev,
                         banner: prev.banner === item.title ? '' : item.title,
                       }));
+                      setBannerError("");
                     }}
                     sx={(theme) => ({
                       cursor: 'pointer',
@@ -294,6 +416,11 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onSh
                 </Box>
                 </>
                 )}
+                {bannerError && (
+                <Typography variant="body2" color="error">
+                    {bannerError}
+                </Typography>
+                )}
               </div>
             </>
           ) : (
@@ -337,7 +464,7 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, onSh
         <DialogActions className="flex justify-center">
           <Box width="100%" display="flex" justifyContent="center">
             {step === 1 ? ( 
-              <Button variant="contained" onClick={() => setStep(2)}>
+              <Button variant="contained" onClick={handleNextClick}>
                 Next 
               </Button>
             ) : (

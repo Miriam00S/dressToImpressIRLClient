@@ -18,8 +18,8 @@ import AddIcon from '@mui/icons-material/Add';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LoginDialog from './LoginDialog';
-import { BASE_URL, fetchGET, fetchPOST } from '../services/api';
-import { Show, User } from '../services/types';
+import { BASE_URL, fetchGET, fetchPOST, fetchPUT } from '../services/api';
+import { User } from '../services/types';
 import { Notification } from '../services/types';
 import CreateShowDialog from './CreateShowDialog';
 
@@ -82,46 +82,35 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
     }
   };
 
-  const handleShowCreated = (show: Show) => {
-    console.log('New show created:', show);
-    // Możesz tu np. przekierować użytkownika lub odświeżyć listę show
-  };
 
   const unreadCount = user?.notifications
     ? user.notifications.filter((notification: Notification) => !notification.read).length
     : 0;
 
-  const handleNotificationItemClick = async (notification: Notification) => {
-    try {
-      const response = await fetch(`${BASE_URL}/notifications/${notification.id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          read: true,
-          message: notification.message,
-        }),
-      });
-      if (!response.ok) {
-        throw new Error(`PUT request error: ${response.statusText}`);
+    const handleNotificationItemClick = async (notification: Notification) => {
+      try {
+        const updatedNotification = await fetchPUT<{ read: boolean; message: string }, Notification>(
+          `/notifications/${notification.id}`,
+          {
+            read: true,
+            message: notification.message,
+          }
+        );
+    
+        if (user) {
+          setUser({
+            ...user,
+            notifications: user.notifications.map((n: Notification) =>
+              n.id === notification.id ? updatedNotification : n
+            ),
+          });
+        }
+      } catch (error) {
+        console.error('Błąd podczas aktualizacji powiadomienia:', error);
       }
-      const updatedNotification = await response.json();
-      if (user) {
-        setUser({
-          ...user,
-          notifications: user.notifications.map((n: Notification) =>
-            n.id === notification.id ? updatedNotification : n
-          ),
-        });
-      }
-    } catch (error) {
-      console.error('Błąd podczas aktualizacji powiadomienia:', error);
-    }
-    handleNotificationMenuClose();
-  };
+      handleNotificationMenuClose();
+    };
+    
 
   return (
     <div className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 py-2 bg-white ">
@@ -270,11 +259,13 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
         }}
       />
 
-      <CreateShowDialog 
-        open={isCreateShowOpen} 
-        onClose={() => setIsCreateShowOpen(false)}
-        onShowCreated={handleShowCreated}
-      />
+      {user && (
+        <CreateShowDialog 
+          open={isCreateShowOpen} 
+          onClose={() => setIsCreateShowOpen(false)}
+          creatorId={user?.id}
+        />
+      )}
 
     </div>
 

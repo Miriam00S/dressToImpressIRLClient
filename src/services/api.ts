@@ -1,4 +1,3 @@
-// api.ts
 export const BASE_URL = 'http://localhost:8080';
 
 export const fetchGET = async (endpoint: string) => {
@@ -17,7 +16,7 @@ export const fetchGET = async (endpoint: string) => {
   return await response.json();
 };
 
-export const fetchPOST = async (endpoint: string, data: any) => {
+export const fetchPOST = async <T, R>(endpoint: string, data: T): Promise<R> => {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     method: 'POST',
     credentials: 'include',
@@ -35,7 +34,8 @@ export const fetchPOST = async (endpoint: string, data: any) => {
   return await response.json();
 };
 
-export const fetchPUT = async (endpoint: string, data: any) => {
+
+export const fetchPUT = async <T, R>(endpoint: string, data: T): Promise<R> => {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     method: 'PUT',
     credentials: 'include',
@@ -53,6 +53,7 @@ export const fetchPUT = async (endpoint: string, data: any) => {
   return await response.json();
 };
 
+
 export const fetchDELETE = async (endpoint: string) => {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     method: 'DELETE',
@@ -68,3 +69,22 @@ export const fetchDELETE = async (endpoint: string) => {
 
   return await response.json();
 };
+
+
+export const uploadFile = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${BASE_URL}/files/upload`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`File upload error: ${response.statusText}`);
+  }
+  const text = await response.text();
+  return text.replace(/^uploads\//, '');
+};
+
