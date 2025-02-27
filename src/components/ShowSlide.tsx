@@ -15,7 +15,7 @@ const ShowSlide: React.FC<ShowSlideProps> = ({ show }) => {
   return (
     <div
       style={{
-        backgroundImage: `url(${BASE_URL}/files/${show.banner})`,
+        backgroundImage: show.banner ? `url(${BASE_URL}/files/${show.banner})` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         height: '400px',

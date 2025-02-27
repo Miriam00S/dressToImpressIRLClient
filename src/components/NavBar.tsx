@@ -19,8 +19,9 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LoginDialog from './LoginDialog';
 import { BASE_URL, fetchGET, fetchPOST } from '../services/api';
-import { User } from '../services/types';
+import { Show, User } from '../services/types';
 import { Notification } from '../services/types';
+import CreateShowDialog from './CreateShowDialog';
 
 interface NavBarProps {
   onSearch: (query: string) => void;
@@ -34,6 +35,7 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
   const [user, setUser] = useState<User>();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState<null | HTMLElement>(null);
+  const [isCreateShowOpen, setIsCreateShowOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -78,6 +80,11 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
     } catch (error) {
       console.error('Error logging out:', error);
     }
+  };
+
+  const handleShowCreated = (show: Show) => {
+    console.log('New show created:', show);
+    // Możesz tu np. przekierować użytkownika lub odświeżyć listę show
   };
 
   const unreadCount = user?.notifications
@@ -177,7 +184,7 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
       <div className="flex items-center gap-4">
         {isLogged ? (
           <>
-            <Button variant="outlined" className="gap-1">
+            <Button variant="outlined" className="gap-1" onClick={() => setIsCreateShowOpen(true)}>
               <AddIcon />
               Create show
             </Button>
@@ -262,7 +269,16 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
           setUser(userData);
         }}
       />
+
+      <CreateShowDialog 
+        open={isCreateShowOpen} 
+        onClose={() => setIsCreateShowOpen(false)}
+        onShowCreated={handleShowCreated}
+      />
+
     </div>
+
+    
   );
 };
 

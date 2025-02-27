@@ -17,7 +17,7 @@ const ShowCard: React.FC<ShowCardProps> = ({ show }) => {
       <CardMedia
         component="img"
         sx={{ height: 150, objectFit: 'cover' }}
-        image={`${BASE_URL}/files/${show.banner}`}
+        image={show.banner ? `${BASE_URL}/files/${show.banner}` : ''}
         alt={show.topic}
       />
       <CardContent>
