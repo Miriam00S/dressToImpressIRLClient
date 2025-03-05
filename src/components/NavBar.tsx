@@ -123,13 +123,13 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
         id="searchField"
         freeSolo
         inputValue={inputValue}
-        onInputChange={(event, newInputValue, reason) => {
+        onInputChange={(_, newInputValue, reason) => {
           setInputValue(newInputValue);
           if (reason === "clear") {
             onSearch("");
           }
         }}
-        onChange={(event, value) => {
+        onChange={(_, value) => {
           if (typeof value === "string") {
             onSearch(value);
           } else if (value) {
