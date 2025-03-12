@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Skeleton } from '@mui/material';
-import { Show } from '../services/types';
+import { Show, User } from '../services/types';
 import { fetchGET } from '../services/api';
 import ShowCard from './ShowCard';
 import Carousel from './CarouselWithArrows';
@@ -14,6 +14,7 @@ const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => 
   const [loading, setLoading] = useState<boolean>(true);
   const [itemsToShow, setItemsToShow] = useState<number>(1);
   const [cardWidth, setCardWidth] = useState<number>(300);
+  const [user, setUser] = useState<User>();
 
   useEffect(() => {
     const fetchShows = async () => {
@@ -31,6 +32,21 @@ const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => 
 
     fetchShows();
   }, [category]);
+
+  useEffect(() => {
+      const checkSession = async () => {
+        try {
+          const userData = await fetchGET('/users/me');
+          if (userData) {
+            setUser(userData);
+          }
+        } catch (error) {
+          console.error('No active session or error while checking the session:', error);
+        }
+      };
+  
+      checkSession();
+    }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -74,7 +90,7 @@ const ShowListByCategory: React.FC<ShowListByCategoryProps> = ({ category }) => 
           <Carousel itemsToShow={itemsToShow}>
             {shows.map((show) => (
               <div className="p-1" key={show.id}>
-                <ShowCard show={show} />
+                <ShowCard show={show} user={user}/>
               </div>
             ))}
           </Carousel>

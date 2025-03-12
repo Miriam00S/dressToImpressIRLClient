@@ -88,11 +88,6 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, crea
       ...prevValues,
       [name]: value,
     }));
-    
-    if (name === "topic" && value.trim() !== "") {
-      setError(false);
-      setHelperText("");
-    }
   };
   
 
@@ -236,7 +231,6 @@ const CreateShowDialog: React.FC<CreateShowDialogProps> = ({ open, onClose, crea
                   required
                   id="topic"
                   name="topic"
-                  autoFocus
                   margin="dense"
                   label="Topic"
                   type="text"

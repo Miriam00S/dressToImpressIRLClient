@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import logo from '../assets/images/logo.png';
 import {
   Autocomplete,
@@ -19,9 +19,10 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LoginDialog from './LoginDialog';
 import { BASE_URL, fetchGET, fetchPOST, fetchPUT } from '../services/api';
-import { User } from '../services/types';
 import { Notification } from '../services/types';
 import CreateShowDialog from './CreateShowDialog';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../services/contexts/AuthContextType';
 
 interface NavBarProps {
   onSearch: (query: string) => void;
@@ -29,10 +30,11 @@ interface NavBarProps {
 }
 
 const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
+  const navigate = useNavigate(); 
+  const location = useLocation();
+  const { user, setUser, isLogged } = useContext(AuthContext)!; 
   const [inputValue, setInputValue] = useState<string>("");
-  const [isLogged, setIsLogged] = useState<boolean>(false);
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
-  const [user, setUser] = useState<User>();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState<null | HTMLElement>(null);
   const [isCreateShowOpen, setIsCreateShowOpen] = useState<boolean>(false);
@@ -42,12 +44,17 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
       try {
         const userData = await fetchGET('/users/me');
         if (userData) {
-          setIsLogged(true);
           setUser(userData);
+        }
+
+        if (location.pathname === '/dressToImpressIRLClient') {
+          navigate('/dressToImpressIRLClient/loggedIn', { replace: true });
         }
       } catch (error) {
         console.error('No active session or error while checking the session:', error);
-        setIsLogged(false);
+        if (location.pathname === '/dressToImpressIRLClient/loggedIn') {
+          navigate('/dressToImpressIRLClient', { replace: true });
+        }
       }
     };
 
@@ -74,8 +81,8 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
     try {
       const response = await fetchPOST('/users/logout', {});
       console.log(response);
-      setIsLogged(false);
-      setUser(undefined);
+      setUser(null);
+      navigate('/dressToImpressIRLClient');
       handleMenuClose();
     } catch (error) {
       console.error('Error logging out:', error);
@@ -253,9 +260,9 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch, autocompleteOptions }) => {
         open={isLoginOpen}
         onClose={() => setIsLoginOpen(false)}
         onLoginSuccess={async () => {
-          setIsLogged(true);
           const userData = await fetchGET('/users/me');
           setUser(userData);
+          navigate('/dressToImpressIRLClient/loggedIn');
         }}
       />
 

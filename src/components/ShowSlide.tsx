@@ -1,16 +1,30 @@
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import { Show } from '../services/types';
 import { Typography, Button } from '@mui/material';
-import { BASE_URL } from '../services/api';
+import { BASE_URL, fetchGET } from '../services/api';
+import JoinShowDialog from './JoinShowDialog';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../services/contexts/AuthContextType';
+import LoginDialog from './LoginDialog';
 
 interface ShowSlideProps {
   show: Show;
 }
 
 const ShowSlide: React.FC<ShowSlideProps> = ({ show }) => {
-  const handleJoin = () => {
-    // Obsługa przycisku Join
-  };
+  const navigate = useNavigate(); 
+  const { user, setUser } = useContext(AuthContext)!;
+  const [isJoinShowOpen, setIsJoinShowOpen] = useState<boolean>(false);
+  const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
+  
+     
+  const handleJoinClick = () => {
+    if (user) {
+      setIsJoinShowOpen(true);
+    } else {
+      setIsLoginOpen(true);
+    }
+  }; 
 
   return (
     <div
@@ -60,11 +74,28 @@ const ShowSlide: React.FC<ShowSlideProps> = ({ show }) => {
           <Button
             variant="contained"
             color="secondary"
-            onClick={handleJoin}
+            onClick={handleJoinClick}
             style={{ minWidth: '150px' }}
           >
             Join
           </Button>
+          { user && 
+          <JoinShowDialog 
+            open={isJoinShowOpen} 
+            onClose={() => setIsJoinShowOpen(false)}
+            show={show}
+            user={user}
+          /> 
+          }
+          <LoginDialog
+            open={isLoginOpen}
+            onClose={() => setIsLoginOpen(false)}
+            onLoginSuccess={async () => {
+              const userData = await fetchGET('/users/me');
+              setUser(userData);
+              navigate('/dressToImpressIRLClient/loggedIn');
+            }}
+          />
         </div>
       </div>
     </div>
